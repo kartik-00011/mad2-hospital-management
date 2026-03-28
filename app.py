@@ -1,4 +1,4 @@
-from flask import Flask,request,redirect,session
+from flask import Flask,request,redirect,session,render_template
 import sqlite3
 from datetime import datetime
 
@@ -194,17 +194,65 @@ def admin_dashboard():
 
 @app.route("/doctor_dashboard")
 def doctor_dashboard():
-   return "Doctor Dashboard"
+   
+   if "user_id" not in session or session.get("role")!="doctor":
+      return "Unauthorised"
+   
+   conn = get_db_connection()
+
+   # get doctor id from doctors table
+   doctor = conn.execute("""
+            SELECT id FROM DOCTORS WHERE user_id = ?
+            """,(session["user_id"],)).fetchone()
+   
+   if doctor is None:
+        conn.close()
+        return "Doctor not found"
+   
+   doctor_id = doctor["id"]
+   
+   # get all appointments of this doctor
+   appointments = conn.execute("""
+            SELECT appointments.id, users.name, appointments.date,
+            appointments.time, appointments.status FROM appointments
+            JOIN users ON appointments.patient_id = users.id
+            WHERE appointments.doctor_id = ?
+             """,(doctor_id,)).fetchall()
+   
+   conn.close()
+
+   return render_template("doctor_dashboard.html",appointments=appointments)
+
+
+
+@app.route("/update_status/<int:app_id>/<status>")
+def update_status(app_id,status):
+
+   if "user_id" not in session or session.get("role")!="doctor":
+      return "Unauthorised"
+   
+   conn = get_db_connection()
+
+   conn.execute("""
+      UPDATE appointments SET status = ? WHERE id = ?
+      """,(status, app_id))
+   
+   conn.commit()
+   conn.close()
+
+   return redirect("/doctor_dashboard")
+
+
 
 @app.route("/patient_dashboard")
 def patient_dashboard():
-   if user_id not in session or session.get("role")!="patient":
+   if "user_id" not in session or session.get("role")!="patient":
       return "Unauthorised access"
    
    conn = get_db_connection()
 
    doctors = conn.execute("""
-      SELECT doctors.id, user.name , doctors.specialization
+      SELECT doctors.id, users.name , doctors.specialization
       FROM doctors
       JOIN users ON doctors.user_id = users.id
       """).fetchall()
@@ -217,7 +265,7 @@ def patient_dashboard():
       output += f"""
          <p>
             {d['name']} ({d['specialization']})
-            <a href = "/book_appointment/{d['id']}>Book</a>
+            <a href = "/book_appointment/{d['id']}">Book</a>
          </p>
       """
    
@@ -225,11 +273,11 @@ def patient_dashboard():
 
 
 
-@app.route("/book_appointment/<int: doctor_id>")
+@app.route("/book_appointment/<int:doctor_id>")
 def book_appointment(doctor_id):
 
-   if user_id not in session or session.get('role')!='patient':
-      return "Unauthorized"
+   if "user_id" not in session or session.get('role')!='patient':
+      return redirect('/login')
    
    conn = get_db_connection()
 
