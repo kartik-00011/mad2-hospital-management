@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Dashboard</title>
+
+    <script src="https://unpkg.com/vue@3"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<div id="app" class="container mt-5">
+
+    <h2 class="text-center mb-4">Patient Dashboard (Vue)</h2>
+
+    <!-- EDIT PROFILE -->
+    <div class="card p-3 mb-4">
+        <h5>Edit Profile</h5>
+
+        <input type="text"
+               v-model="profile_name"
+               placeholder="Enter new name"
+               class="form-control mb-2">
+
+        <input type="password"
+               v-model="profile_password"
+               placeholder="Enter new password"
+               class="form-control mb-2">
+
+        <button class="btn btn-warning w-100"
+                @click="updateProfile()">
+            Update Profile
+        </button>
+
+        <p class="text-success mt-2">[[ profile_message ]]</p>
+    </div>
+
+    <!-- BOOK APPOINTMENT -->
+    <div class="card p-3 mb-4">
+        <h5>Book Appointment</h5>
+
+        <input type="text"
+               v-model="search"
+               placeholder="Search doctor..."
+               class="form-control mb-2">
+
+        <select v-model="doctor_id" class="form-control mb-2">
+            <option disabled value="">Select Doctor</option>
+
+            <option v-for="d in filteredDoctors" :value="d.id">
+                [[ d.name ]] ([[ d.specialization ]])
+            </option>
+        </select>
+
+        <input type="date"
+               v-model="date"
+               class="form-control mb-2">
+
+        <input type="time"
+               v-model="time"
+               class="form-control mb-2">
+
+        <button class="btn btn-primary w-100"
+                @click="bookAppointment()">
+            Book Appointment
+        </button>
+
+        <p class="text-success mt-2">[[ message ]]</p>
+        <p class="text-danger mt-2">[[ error ]]</p>
+    </div>
+
+    <!-- APPOINTMENTS -->
+    <div>
+        <h5>Your Appointments</h5>
+
+        <div v-for="a in appointments" class="card p-3 mb-3">
+
+            <b>Doctor:</b> [[ a.doctor_name ]] <br>
+            <b>Date:</b> [[ a.date ]] | [[ a.time ]] <br>
+
+            <b>Status:</b>
+            <span v-if="a.status=='booked'" class="text-warning">Booked</span>
+            <span v-if="a.status=='completed'" class="text-success">Completed</span>
+            <span v-if="a.status=='cancelled'" class="text-danger">Cancelled</span>
+
+            <br>
+
+            <!-- CANCEL BUTTON -->
+            <button v-if="a.status=='booked'"
+                    class="btn btn-danger btn-sm mt-2"
+                    @click="cancelAppointment(a.id)">
+                Cancel
+            </button>
+
+            <br><br>
+
+            <b>Diagnosis:</b>
+            <span v-text="a.diagnosis ? a.diagnosis : 'N/A'"></span><br>
+
+            <b>Prescription:</b>
+            <span v-text="a.prescription ? a.prescription : 'N/A'"></span>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+const app = Vue.createApp({
+
+    delimiters: ['[[', ']]'],
+
+    data() {
+        return {
+            doctors: [],
+            appointments: [],
+
+            doctor_id: "",
+            date: "",
+            time: "",
+            message: "",
+            error: "",
+            search: "",
+
+            profile_name: "",
+            profile_password: "",
+            profile_message: ""
+        }
+    },
+
+    methods: {
+
+        fetchDoctors() {
+            fetch("/api/doctors")
+                .then(res => res.json())
+                .then(data => this.doctors = data)
+        },
+
+        fetchAppointments() {
+            fetch("/api/appointments")
+                .then(res => res.json())
+                .then(data => this.appointments = data)
+        },
+
+        bookAppointment() {
+            this.message = ""
+            this.error = ""
+
+            fetch("/api/book", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    doctor_id: this.doctor_id,
+                    date: this.date,
+                    time: this.time
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    this.error = data.error
+                } else {
+                    this.message = data.message
+                    this.fetchAppointments()
+                }
+            })
+        },
+
+        cancelAppointment(id) {
+            fetch(`/cancel_appointment/${id}`)
+                .then(res => res.json())
+                .then(() => this.fetchAppointments())
+        },
+
+        updateProfile() {
+
+            if (!this.profile_name && !this.profile_password) {
+               this.profile_message = "Enter something to update"
+               return
+            }
+
+            fetch("/update_profile", {
+               method: "POST",
+               headers: {"Content-Type": "application/json"},
+               body: JSON.stringify({
+                     name: this.profile_name,
+                     password: this.profile_password
+               })
+            })
+            .then(res => res.json())
+            .then(data => {
+               this.profile_message = data.message
+
+               // CLEAR FIELDS AFTER UPDATE
+               this.profile_name = ""
+               this.profile_password = ""
+            })
+         }
+    },
+
+    computed: {
+        filteredDoctors() {
+            return this.doctors.filter(d =>
+                d.name.toLowerCase().includes(this.search.toLowerCase()) ||
+                d.specialization.toLowerCase().includes(this.search.toLowerCase())
+            )
+        }
+    },
+
+    mounted() {
+        this.fetchDoctors()
+        this.fetchAppointments()
+    }
+})
+
+app.mount("#app")
+</script>
+
+</body>
+</html>

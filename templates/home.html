@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hospital Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f7fb;
+        }
+
+        .hero {
+            background: url("https://images.unsplash.com/photo-1586773860418-d37222d8fce3") center/cover no-repeat;
+            height: 300px;
+            border-radius: 15px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .overlay {
+            background: rgba(0,0,0,0.5);
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .feature-card {
+            border: none;
+            border-radius: 12px;
+            transition: 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn-lg {
+            padding: 10px 25px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container mt-5">
+
+    <!-- HERO -->
+    <div class="hero mb-5">
+        <div class="overlay">
+            <h1 class="fw-bold">🏥 Hospital Management System</h1>
+            <p>Manage doctors, patients, and appointments efficiently</p>
+
+            <a href="/login" class="btn btn-primary btn-lg me-2">Login</a>
+            <a href="/register" class="btn btn-outline-light btn-lg">Register</a>
+        </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="row text-center">
+
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card p-4">
+                <img src="https://cdn-icons-png.flaticon.com/512/3774/3774299.png" width="60" class="mb-3 mx-auto">
+                <h5>Doctors</h5>
+                <p>Manage profiles, availability, and treatments</p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card p-4">
+                <img src="https://cdn-icons-png.flaticon.com/512/747/747310.png" width="60" class="mb-3 mx-auto">
+                <h5>Appointments</h5>
+                <p>Book, track, and manage schedules easily</p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card p-4">
+                <img src="https://cdn-icons-png.flaticon.com/512/2920/2920061.png" width="60" class="mb-3 mx-auto">
+                <h5>Records</h5>
+                <p>Maintain diagnosis, prescriptions, and history</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
